@@ -1,0 +1,190 @@
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r libraries, include=FALSE}
+library(dplyr)
+library(readr)
+library(knitr)
+library(tidyverse)
+library(janitor)
+library(visdat)
+library(gtsummary)
+```
+
+
+```{r}
+aus_men <- read_csv("AusOpen-men-2013.csv")
+aus_women <- read_csv("AusOpen-women-2013.csv")
+
+french_men <- read_csv("FrenchOpen-men-2013.csv")
+french_women <- read_csv("FrenchOpen-women-2013.csv")
+
+us_men <- read_csv("USOpen-men-2013.csv")
+us_women <- read_csv("USOpen-women-2013.csv")
+
+wimbledon_men <- read_csv("Wimbledon-men-2013.csv")
+wimbledon_women <- read_csv("Wimbledon-women-2013.csv")
+```
+
+```{r}
+
+aus_women_stats <- aus_women %>%
+  select(Result,FSP.1,FSP.2,FSW.1,FSW.2,SSP.1,SSP.2,SSW.1,SSW.2,ACE.1,ACE.2,DBF.1,DBF.2,WNR.1,WNR.2,UFE.1,UFE.2,BPC.1,BPC.2,BPW.1,BPW.2,NPA.1,NPA.2,NPW.1,NPW.2) %>%
+  mutate(gender = "women", tournament = "australian")
+
+aus_men_stats <- aus_men %>%
+  select(Result,FSP.1,FSP.2,FSW.1,FSW.2,SSP.1,SSP.2,SSW.1,SSW.2,ACE.1,ACE.2,DBF.1,DBF.2,WNR.1,WNR.2,UFE.1,UFE.2,BPC.1,BPC.2,BPW.1,BPW.2,NPA.1,NPA.2,NPW.1,NPW.2) %>%
+  mutate(gender = "men", tournament = "australian")
+
+french_women_stats <- french_women %>%
+  select(Result,FSP.1,FSP.2,FSW.1,FSW.2,SSP.1,SSP.2,SSW.1,SSW.2,ACE.1,ACE.2,DBF.1,DBF.2,WNR.1,WNR.2,UFE.1,UFE.2,BPC.1,BPC.2,BPW.1,BPW.2,NPA.1,NPA.2,NPW.1,NPW.2) %>%
+  mutate(gender = "women", tournament = "french")
+
+french_men_stats <- french_men %>%
+  select(Result,FSP.1,FSP.2,FSW.1,FSW.2,SSP.1,SSP.2,SSW.1,SSW.2,ACE.1,ACE.2,DBF.1,DBF.2,WNR.1,WNR.2,UFE.1,UFE.2,BPC.1,BPC.2,BPW.1,BPW.2,NPA.1,NPA.2,NPW.1,NPW.2) %>%
+  mutate(gender = "men", tournament = "french")
+
+us_women_stats <- us_women %>%
+  select(Result,FSP.1,FSP.2,FSW.1,FSW.2,SSP.1,SSP.2,SSW.1,SSW.2,ACE.1,ACE.2,DBF.1,DBF.2,WNR.1,WNR.2,UFE.1,UFE.2,BPC.1,BPC.2,BPW.1,BPW.2,NPA.1,NPA.2,NPW.1,NPW.2)
+
+us_men_stats <- us_men %>%
+  select(Result,FSP.1,FSP.2,FSW.1,FSW.2,SSP.1,SSP.2,SSW.1,SSW.2,ACE.1,ACE.2,DBF.1,DBF.2,WNR.1,WNR.2,UFE.1,UFE.2,BPC.1,BPC.2,BPW.1,BPW.2,NPA.1,NPA.2,NPW.1,NPW.2)
+
+wimbledon_women_stats <- wimbledon_women %>%
+  select(Result,FSP.1,FSP.2,FSW.1,FSW.2,SSP.1,SSP.2,SSW.1,SSW.2,ACE.1,ACE.2,DBF.1,DBF.2,WNR.1,WNR.2,UFE.1,UFE.2,BPC.1,BPC.2,BPW.1,BPW.2,NPA.1,NPA.2,NPW.1,NPW.2) %>%
+  mutate(gender = "women", tournament = "wimbledon")
+
+wimbledon_men_stats <- wimbledon_men %>%
+  select(Result,FSP.1,FSP.2,FSW.1,FSW.2,SSP.1,SSP.2,SSW.1,SSW.2,ACE.1,ACE.2,DBF.1,DBF.2,WNR.1,WNR.2,UFE.1,UFE.2,BPC.1,BPC.2,BPW.1,BPW.2,NPA.1,NPA.2,NPW.1,NPW.2) %>%
+  mutate(gender = "men", tournament = "wimbledon")
+
+aus_open <- rbind(aus_women_stats, aus_men_stats)
+french_open <- rbind(french_women_stats, french_men_stats)
+wimbledon <- rbind(wimbledon_women_stats, wimbledon_men_stats)
+merge1 <- rbind(aus_open, french_open)
+data <- rbind(merge1, wimbledon)
+
+data_final <- na.omit(data)
+```
+
+### Overall
+
+```{r}
+linearmodel1 <- glm(Result ~ . - gender - tournament - Result, data_final, family = "binomial")
+summary(linearmodel1)
+```
+
+
+```{r}
+dataframe <- data_final %>% 
+  select(FSP.1,FSP.2,FSW.1,FSW.2,SSP.1,SSP.2,SSW.1,SSW.2,ACE.1,ACE.2,DBF.1,DBF.2,WNR.1,WNR.2,UFE.1,UFE.2,BPC.1,BPC.2,BPW.1,BPW.2,NPA.1,NPA.2,NPW.1,NPW.2)
+```
+
+```{r}
+library(car)
+cor(dataframe)
+```
+
+```{r}
+linearmodel2 <- lm(Result ~ . - gender - tournament - Result - SSP.1 - SSP.2, data_final, family = "binomial")
+summary(linearmodel2)
+```
+
+```{r}
+vif(linearmodel2)
+```
+```{r}
+linearmodel3 <- lm(Result ~ . - gender - tournament - Result - SSP.1 - SSP.2 - FSW.1 - FSW.2 - NPW.1 - NPW.2 - WNR.1 - WNR.2, data_final, family = "binomial")
+summary(linearmodel3)
+```
+```{r}
+vif(linearmodel3)
+```
+### Women
+
+```{r}
+data_women <- data_final %>%
+  filter(gender == "women")
+
+linearmodel4 <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2  + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data_women, family = "binomial")
+summary(linearmodel4)
+```
+
+```{r}
+vif(linearmodel4)
+```
+```{r}
+linearmodel5 <- glm(Result ~ FSP.1 + FSP.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPW.1 + NPW.2, data_women, family = "binomial")
+
+summary(linearmodel5)
+```
+
+```{r}
+vif(linearmodel5)
+```
+
+
+### Men
+
+```{r}
+data_men <- data_final %>%
+  filter(gender == "men")
+
+linearmodel6 <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2  + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data_women, family = "binomial")
+summary(linearmodel6)
+```
+```{r}
+vif(linearmodel6)
+```
+```{r}
+linearmodel7 <- glm(Result ~ FSP.1 + FSP.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPW.1 + NPW.2, data_women, family = "binomial")
+summary(linearmodel7)
+```
+
+```{r}
+vif(linearmodel7)
+```
+### Australian Open
+
+```{r}
+linearmodel8 <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2  + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, aus_open, family = "binomial")
+summary(linearmodel8)
+```
+
+```{r}
+vif(linearmodel8)
+```
+
+```{r}
+linearmodel9 <- glm(Result ~ FSP.1 + FSP.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + UFE.1 + UFE.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2, aus_open, family = "binomial")
+summary(linearmodel9)
+```
+
+```{r}
+vif(linearmodel9)
+```
+
+### French Open
+
+```{r}
+linearmodel10 <- glm(Result ~ FSP.1 + FSP.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + UFE.1 + UFE.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2, french_open, family = "binomial")
+summary(linearmodel10)
+```
+
+```{r}
+vif(linearmodel10)
+```
+
+### Wimbledon
+
+```{r}
+linearmodel11 <- glm(Result ~ FSP.1 + FSP.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + NPA.1 + NPA.2, wimbledon, family = "binomial")
+summary(linearmodel11)
+```
+
+```{r}
+vif(linearmodel11)
+```
+
