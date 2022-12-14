@@ -69,6 +69,123 @@ data <- rbind(merge1, wimbledon)
 data_final <- na.omit(data)
 ```
 
+
+```{r corplots}
+
+first_vars <- data_final[1:9]
+second_vars <- data_final[c(1,10:17)]
+third_vars <- data_final[c(1,18:25)]
+
+corrplot.mixed(cor(first_vars),
+               lower = "number", 
+               upper = "circle", 
+               tl.pos = "lt")
+corrplot.mixed(cor(second_vars),
+               lower = "number", 
+               upper = "circle", 
+               tl.pos = "lt")
+corrplot.mixed(cor(third_vars),
+               lower = "number", 
+               upper = "circle", 
+               tl.pos = "lt")
+
+```
+
+```{r}
+FSP_plot <- ggplot(data_final, aes(factor(Result), FSP.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 First Serve Percentage', x = "Winner", y = "First Serve Percentage")
+FSP_plot
+```
+```{r}
+FSW_plot <- ggplot(data_final, aes(factor(Result), FSW.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 First Serves Won', x = "Winner", y = "First Serves Won")
+FSW_plot
+```
+
+```{r}
+SSP_plot <- ggplot(data_final, aes(factor(Result), SSP.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Second Serve Percentage', x = "Winner", y = "Second Serve Percentage")
+SSP_plot
+```
+
+```{r}
+SSW_plot <- ggplot(data_final, aes(factor(Result), SSW.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Second Serves Won', x = "Winner", y = "Second Serves Won")
+SSW_plot
+```
+```{r}
+ACE_plot <- ggplot(data_final, aes(factor(Result), ACE.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Aces', x = "Winner", y = "Number of Aces")
+ACE_plot
+```
+
+```{r}
+DBF_plot <- ggplot(data_final, aes(factor(Result), DBF.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Double Faults', x = "Winner", y = "Double Faults")
+DBF_plot
+```
+
+```{r}
+WNR_plot <- ggplot(data_final, aes(factor(Result), WNR.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Winners', x = "Winner", y = "Winners")
+WNR_plot
+```
+
+```{r}
+UFE_plot <- ggplot(data_final, aes(factor(Result), UFE.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Unforced Errors', x = "Winner", y = "Unforced Errors")
+UFE_plot
+```
+```{r}
+BPC_plot <- ggplot(data_final, aes(factor(Result), BPC.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Break Points Created', x = "Winner", y = "Break Points Created")
+BPC_plot
+```
+
+```{r}
+BPW_plot <- ggplot(data_final, aes(factor(Result), BPW.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Break Points Won', x = "Winner", y = "Break Points Won")
+BPW_plot
+```
+
+```{r}
+NPA_plot <- ggplot(data_final, aes(factor(Result), NPA.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Net Points Attempted', x = "Winner", y = "Net Points Attempted")
+NPA_plot
+```
+
+```{r}
+NPW_plot <- ggplot(data_final, aes(factor(Result), NPW.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Net Points Won', x = "Winner", y = "Net Points Won")
+NPW_plot
+```
+
+### Logistic Regression Model based on EDA
+
+```{r}
+corrlog <- glm(Result ~  WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2, data= data_final, family = "binomial")
+summary(corrlog)
+```
+
+```{r}
+library(car)
+vif(corrlog)
+```
+
+
+
 ### Overall
 
 ```{r}
@@ -95,13 +212,27 @@ summary(linearmodel2)
 ```{r}
 vif(linearmodel2)
 ```
+
 ```{r}
-linearmodel3 <- lm(Result ~ . - gender - tournament - Result - SSP.1 - SSP.2 - FSW.1 - FSW.2 - NPW.1 - NPW.2 - WNR.1 - WNR.2, data_final, family = "binomial")
+linearmodel3 <- lm(Result ~ . - gender - tournament - Result - SSP.1 - SSP.2 - FSP.1 - FSP.2 - ACE.1 - ACE.2 - DBF.1 - DBF.2 - NPA.1 - NPA.2 - NPW.1 - NPW.2 - WNR.1 - WNR.2 - UFE.1 - UFE.2, data_final, family = "binomial")
 summary(linearmodel3)
 ```
+
 ```{r}
 vif(linearmodel3)
 ```
+
+
+```{r}
+AIC(corrlog)
+AIC(linearmodel3)
+
+BIC(corrlog)
+BIC(linearmodel3)
+```
+
+
+
 ### Women
 
 ```{r}
@@ -115,9 +246,9 @@ summary(linearmodel4)
 ```{r}
 vif(linearmodel4)
 ```
-```{r}
-linearmodel5 <- glm(Result ~ FSP.1 + FSP.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPW.1 + NPW.2, data_women, family = "binomial")
 
+```{r}
+linearmodel5 <- glm(Result ~ FSW.1 + FSW.2  + SSW.1 + SSW.2 + BPC.1 + BPC.2, data_women, family = "binomial")
 summary(linearmodel5)
 ```
 
@@ -135,17 +266,20 @@ data_men <- data_final %>%
 linearmodel6 <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2  + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data_women, family = "binomial")
 summary(linearmodel6)
 ```
+
 ```{r}
 vif(linearmodel6)
 ```
+
 ```{r}
-linearmodel7 <- glm(Result ~ FSP.1 + FSP.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPW.1 + NPW.2, data_women, family = "binomial")
+linearmodel7 <- glm(Result ~ FSW.1 + FSW.2  + SSW.1 + SSW.2 + BPC.1 + BPC.2, data_women, family = "binomial")
 summary(linearmodel7)
 ```
 
 ```{r}
 vif(linearmodel7)
 ```
+
 ### Australian Open
 
 ```{r}
@@ -158,7 +292,7 @@ vif(linearmodel8)
 ```
 
 ```{r}
-linearmodel9 <- glm(Result ~ FSP.1 + FSP.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + UFE.1 + UFE.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2, aus_open, family = "binomial")
+linearmodel9 <- glm(Result ~ BPC.1 + BPC.2, aus_open, family = "binomial")
 summary(linearmodel9)
 ```
 
@@ -187,4 +321,65 @@ summary(linearmodel11)
 ```{r}
 vif(linearmodel11)
 ```
+
+### Lasso
+
+```{r}
+library(glmnet)
+
+# Dumy code categorical predictor variables
+x <- model.matrix(Result~.-gender-tournament, data_final)[,-1]
+# Convert the outcome (class) to a numerical variable
+y <- data_final$Result
+```
+
+
+```{r}
+# Find the best lambda using cross-validation
+set.seed(123) 
+cv.lasso <- cv.glmnet(x, y, alpha = 1, family = "binomial")
+# Fit the final model on the training data
+model <- glmnet(x, y, alpha = 1, family = "binomial",
+                lambda = cv.lasso$lambda.min)
+# Display regression coefficients
+coef(model)
+```
+
+
+### Classification Tree
+
+```{r}
+# Classification Tree with rpart
+library(rpart) #for fitting decision trees
+library(rpart.plot) #for plotting decision trees
+
+# grow tree
+fit <- rpart(Result ~ . - gender - tournament - Result,
+   method="class", data= data_final)
+
+printcp(fit) # display the results
+plotcp(fit) # visualize cross-validation results
+summary(fit) # detailed summary of splits
+
+# plot tree
+plot(fit, uniform=TRUE,
+   main="Classification Tree for Match Winner")
+text(fit, use.n=TRUE, all=TRUE, cex=.8)
+
+```
+
+```{r}
+best <- fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"]
+
+#produce a pruned tree based on the best cp value
+pruned_tree <- prune(fit, cp=best)
+
+#plot the pruned tree
+prp(pruned_tree,
+    faclen=0, #use full names for factor labels
+    extra=1, #display number of obs. for each terminal node
+    roundint=F, #don't round to integers in output
+    digits=5)
+```
+
 
