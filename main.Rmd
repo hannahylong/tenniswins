@@ -1,4 +1,6 @@
 
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
@@ -13,6 +15,16 @@ library(visdat)
 library(gtsummary)
 ```
 
+## Introduction
+
+Tennis is one of the most popular sports around the world. The game is very dynamic and has a lot of moving parts: serving, baseline play, and net play. Each match consists of many points, and thus a lot of data can be collected about each player's performance over the course of an entire match. The goal of this analysis is to understand which match and/or player statistics have the strongest associations with winning a match and to quantify those associations.   
+
+The dataset we are analyzing contains match statistics from 943 men's and women's matches which occurred in one of four grand slam tournaments in 2013: the Australian Open, the French Open, Wimbledon, and the US Open. Each observation is an individual match. The response variable is a binary indicator: a value of 1 indicates that player 1 won the match, and a value of 0 indicates that player 1 lost the match (the player numbers are arbitrarily assigned and correspond to which player name is listed first for each observation). The match statistics recorded for each observation are First Serve Percentage, First Serves Won, Second Serve Percentage, Second Serves Won, Aces, Double Faults, Winners, Unforced Errors, Break Points Created, Break Points Won, Net Points Attempted, Net Points Won, Total Points Won, Results for each set, and Final Number of Games Won (recorded for each player). The Australian Open and the US Open are both played on hard court, the French Open is played on clay, and Wimbledon is played on grass.
+
+Our primary research question for this analysis is: Which tennis match statistics are most strongly associated with winning, and does that vary by gender and/or court surface?
+
+
+## Data
 
 ```{r}
 aus_men <- read_csv("AusOpen-men-2013.csv")
@@ -27,6 +39,11 @@ us_women <- read_csv("USOpen-women-2013.csv")
 wimbledon_men <- read_csv("Wimbledon-men-2013.csv")
 wimbledon_women <- read_csv("Wimbledon-women-2013.csv")
 ```
+
+
+After examining the data, I first selected only for relevant match statistics: player names were removed because I am not considering any background information about specific players in my analysis, and the results at the end of each set and the total games won were removed because I am only interested in purely how players' performance during the points is associated with the final winner.  
+
+I also noticed that virtually every observation from the US Open had some missing data. Thus, I completely removed data from the US Open from my analysis and only analyzed data from the other three grand slam tournaments (one of each surface). In the remaining data, 74 out of 741 observations had some missingness with no clear pattern. Because this was a relatively small number of observations with no clear pattern of missingness, I dropped the observations with missing data from my analysis. However, it is worth noting I have not verified the assumption that the missing data is missing completely at random. 
 
 ```{r}
 
@@ -69,27 +86,7 @@ data <- rbind(merge1, wimbledon)
 data_final <- na.omit(data)
 ```
 
-
-```{r corplots}
-
-first_vars <- data_final[1:9]
-second_vars <- data_final[c(1,10:17)]
-third_vars <- data_final[c(1,18:25)]
-
-corrplot.mixed(cor(first_vars),
-               lower = "number", 
-               upper = "circle", 
-               tl.pos = "lt")
-corrplot.mixed(cor(second_vars),
-               lower = "number", 
-               upper = "circle", 
-               tl.pos = "lt")
-corrplot.mixed(cor(third_vars),
-               lower = "number", 
-               upper = "circle", 
-               tl.pos = "lt")
-
-```
+To visually investigate the associations between match statistics and match winners, I created bar plots comparing player 1 statistics when player 1 won and when player 1 lost. 
 
 ```{r}
 FSP_plot <- ggplot(data_final, aes(factor(Result), FSP.1)) +
@@ -97,6 +94,7 @@ FSP_plot <- ggplot(data_final, aes(factor(Result), FSP.1)) +
   labs(title = 'Winner And Player 1 First Serve Percentage', x = "Winner", y = "First Serve Percentage")
 FSP_plot
 ```
+
 ```{r}
 FSW_plot <- ggplot(data_final, aes(factor(Result), FSW.1)) +
   geom_boxplot() +
@@ -104,12 +102,6 @@ FSW_plot <- ggplot(data_final, aes(factor(Result), FSW.1)) +
 FSW_plot
 ```
 
-```{r}
-SSP_plot <- ggplot(data_final, aes(factor(Result), SSP.1)) +
-  geom_boxplot() +
-  labs(title = 'Winner And Player 1 Second Serve Percentage', x = "Winner", y = "Second Serve Percentage")
-SSP_plot
-```
 
 ```{r}
 SSW_plot <- ggplot(data_final, aes(factor(Result), SSW.1)) +
@@ -124,12 +116,6 @@ ACE_plot <- ggplot(data_final, aes(factor(Result), ACE.1)) +
 ACE_plot
 ```
 
-```{r}
-DBF_plot <- ggplot(data_final, aes(factor(Result), DBF.1)) +
-  geom_boxplot() +
-  labs(title = 'Winner And Player 1 Double Faults', x = "Winner", y = "Double Faults")
-DBF_plot
-```
 
 ```{r}
 WNR_plot <- ggplot(data_final, aes(factor(Result), WNR.1)) +
@@ -158,79 +144,22 @@ BPW_plot <- ggplot(data_final, aes(factor(Result), BPW.1)) +
 BPW_plot
 ```
 
-```{r}
-NPA_plot <- ggplot(data_final, aes(factor(Result), NPA.1)) +
-  geom_boxplot() +
-  labs(title = 'Winner And Player 1 Net Points Attempted', x = "Winner", y = "Net Points Attempted")
-NPA_plot
-```
 
-```{r}
-NPW_plot <- ggplot(data_final, aes(factor(Result), NPW.1)) +
-  geom_boxplot() +
-  labs(title = 'Winner And Player 1 Net Points Won', x = "Winner", y = "Net Points Won")
-NPW_plot
-```
+## Methodology
 
-### Logistic Regression Model based on EDA
+With a set of predictors and a binary response variable, I started my analysis with logistic regression modelling,
 
-```{r}
-corrlog <- glm(Result ~  WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2, data= data_final, family = "binomial")
-summary(corrlog)
-```
+Evaluating the correlation of all the predictor variables showed that Second Serve Percentage is perfectly negatively correlated with First Serve Percentage for both players (as shown in Appendix B). Therefore, I removed Second Serve Percentage entirely from my models.
 
-```{r}
-library(car)
-vif(corrlog)
-```
-
-
+I began with building a logistic regression model from the full dataset.
 
 ### Overall
 
-```{r}
-linearmodel1 <- glm(Result ~ . - gender - tournament - Result, data_final, family = "binomial")
-summary(linearmodel1)
-```
-
 
 ```{r}
-dataframe <- data_final %>% 
-  select(FSP.1,FSP.2,FSW.1,FSW.2,SSP.1,SSP.2,SSW.1,SSW.2,ACE.1,ACE.2,DBF.1,DBF.2,WNR.1,WNR.2,UFE.1,UFE.2,BPC.1,BPC.2,BPW.1,BPW.2,NPA.1,NPA.2,NPW.1,NPW.2)
+linearmodel_overall <- lm(Result ~ . - gender - tournament - Result - SSP.1 - SSP.2, data_final, family = "binomial")
+summary(linearmodel_overall)
 ```
-
-```{r}
-library(car)
-cor(dataframe)
-```
-
-```{r}
-linearmodel2 <- lm(Result ~ . - gender - tournament - Result - SSP.1 - SSP.2, data_final, family = "binomial")
-summary(linearmodel2)
-```
-
-```{r}
-vif(linearmodel2)
-```
-
-```{r}
-linearmodel3 <- lm(Result ~ . - gender - tournament - Result - SSP.1 - SSP.2 - FSP.1 - FSP.2 - ACE.1 - ACE.2 - DBF.1 - DBF.2 - NPA.1 - NPA.2 - NPW.1 - NPW.2 - WNR.1 - WNR.2 - UFE.1 - UFE.2, data_final, family = "binomial")
-summary(linearmodel3)
-```
-
-```{r}
-vif(linearmodel3)
-```
-
-
-```{r}
-AIC(corrlog)
-AIC(linearmodel3)
-
-BIC(corrlog)
-BIC(linearmodel3)
-```
-
 
 
 ### Women
@@ -239,21 +168,8 @@ BIC(linearmodel3)
 data_women <- data_final %>%
   filter(gender == "women")
 
-linearmodel4 <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2  + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data_women, family = "binomial")
-summary(linearmodel4)
-```
-
-```{r}
-vif(linearmodel4)
-```
-
-```{r}
-linearmodel5 <- glm(Result ~ FSW.1 + FSW.2  + SSW.1 + SSW.2 + BPC.1 + BPC.2, data_women, family = "binomial")
-summary(linearmodel5)
-```
-
-```{r}
-vif(linearmodel5)
+linearmodel_women <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2  + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data_women, family = "binomial")
+summary(linearmodel_women)
 ```
 
 
@@ -263,86 +179,32 @@ vif(linearmodel5)
 data_men <- data_final %>%
   filter(gender == "men")
 
-linearmodel6 <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2  + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data_women, family = "binomial")
-summary(linearmodel6)
+linearmodel_men <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2  + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data_women, family = "binomial")
+summary(linearmodel_men)
 ```
 
-```{r}
-vif(linearmodel6)
-```
-
-```{r}
-linearmodel7 <- glm(Result ~ FSW.1 + FSW.2  + SSW.1 + SSW.2 + BPC.1 + BPC.2, data_women, family = "binomial")
-summary(linearmodel7)
-```
-
-```{r}
-vif(linearmodel7)
-```
 
 ### Australian Open
 
 ```{r}
-linearmodel8 <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2  + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, aus_open, family = "binomial")
-summary(linearmodel8)
+linearmodel_aus <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, aus_open, family = "binomial")
+summary(linearmodel_aus)
 ```
 
-```{r}
-vif(linearmodel8)
-```
-
-```{r}
-linearmodel9 <- glm(Result ~ BPC.1 + BPC.2, aus_open, family = "binomial")
-summary(linearmodel9)
-```
-
-```{r}
-vif(linearmodel9)
-```
 
 ### French Open
 
 ```{r}
-linearmodel10 <- glm(Result ~ FSP.1 + FSP.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + UFE.1 + UFE.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2, french_open, family = "binomial")
-summary(linearmodel10)
-```
-
-```{r}
-vif(linearmodel10)
+linearmodel_french <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, french_open, family = "binomial")
+summary(linearmodel_french)
 ```
 
 ### Wimbledon
 
 ```{r}
-linearmodel11 <- glm(Result ~ FSP.1 + FSP.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + NPA.1 + NPA.2, wimbledon, family = "binomial")
-summary(linearmodel11)
-```
+linearmodel_wimbledon <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, wimbledon, family = "binomial")
 
-```{r}
-vif(linearmodel11)
-```
-
-### Lasso
-
-```{r}
-library(glmnet)
-
-# Dumy code categorical predictor variables
-x <- model.matrix(Result~.-gender-tournament, data_final)[,-1]
-# Convert the outcome (class) to a numerical variable
-y <- data_final$Result
-```
-
-
-```{r}
-# Find the best lambda using cross-validation
-set.seed(123) 
-cv.lasso <- cv.glmnet(x, y, alpha = 1, family = "binomial")
-# Fit the final model on the training data
-model <- glmnet(x, y, alpha = 1, family = "binomial",
-                lambda = cv.lasso$lambda.min)
-# Display regression coefficients
-coef(model)
+summary(linearmodel_wimbledon)
 ```
 
 
@@ -382,4 +244,122 @@ prp(pruned_tree,
     digits=5)
 ```
 
+```{r}
+library(tree)
+tree3 <- tree(Result ~ . - gender - tournament - Result, data_final)
+summary(tree3)
+plot(tree3)
+text(tree3, pretty = 0)
+```
 
+```{r}
+library(gbm)
+set.seed(1)
+boost <- gbm(Result ~.-gender - tournament - Result, data = data_final, 
+                    distribution = "gaussian", n.trees = 5000,
+                    interaction.depth = 3)
+summary(boost)
+```
+
+```{r}
+library(gbm)
+set.seed(1)
+boost_women <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = data_women, 
+                    distribution = "gaussian", n.trees = 5000,
+                    interaction.depth = 3)
+summary(boost_women)
+```
+
+```{r}
+library(gbm)
+set.seed(1)
+boost_men <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = data_men, 
+                    distribution = "gaussian", n.trees = 5000,
+                    interaction.depth = 3)
+summary(boost_men)
+```
+
+```{r}
+library(gbm)
+set.seed(1)
+boost_aus <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = aus_open, 
+                    distribution = "gaussian", n.trees = 5000,
+                    interaction.depth = 3)
+summary(boost_aus)
+```
+
+```{r}
+library(gbm)
+set.seed(1)
+boost_french <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = french_open, 
+                    distribution = "gaussian", n.trees = 5000,
+                    interaction.depth = 3)
+summary(boost_french)
+```
+
+
+```{r}
+library(gbm)
+set.seed(1)
+boost_wimbledon <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = wimbledon, 
+                    distribution = "gaussian", n.trees = 5000,
+                    interaction.depth = 3)
+summary(boost_wimbledon)
+```
+
+## Results
+
+## Discussion
+
+LIMITATIONS
+- split by gender AND surface type
+- not missing completely at random
+- not enough observations
+- high correlation between variables
+- coefficients in model not statistically significant
+- did not account for player demographics, skill level, ranking, etc.
+- from 2013, could be outdated
+
+## Appendix
+
+### Appendix A
+
+```{r}
+DBF_plot <- ggplot(data_final, aes(factor(Result), DBF.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Double Faults', x = "Winner", y = "Double Faults")
+DBF_plot
+```
+
+```{r}
+NPA_plot <- ggplot(data_final, aes(factor(Result), NPA.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Net Points Attempted', x = "Winner", y = "Net Points Attempted")
+NPA_plot
+```
+
+```{r}
+NPW_plot <- ggplot(data_final, aes(factor(Result), NPW.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Net Points Won', x = "Winner", y = "Net Points Won")
+NPW_plot
+```
+
+```{r}
+SSP_plot <- ggplot(data_final, aes(factor(Result), SSP.1)) +
+  geom_boxplot() +
+  labs(title = 'Winner And Player 1 Second Serve Percentage', x = "Winner", y = "Second Serve Percentage")
+SSP_plot
+```
+
+### Appendix B
+
+```{r}
+dataframe <- data_final %>%
+  select(FSP.1,FSP.2,FSW.1,FSW.2,SSP.1,SSP.2,SSW.1,SSW.2,ACE.1,ACE.2,DBF.1,DBF.2,WNR.1,WNR.2,UFE.1,UFE.2,BPC.1,BPC.2,BPW.1,BPW.2,NPA.1,NPA.2,NPW.1,NPW.2)
+```
+
+```{r}
+library(car)
+cor(dataframe)
+```
