@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 
 
 
@@ -151,14 +156,40 @@ With a set of predictors and a binary response variable, I started my analysis w
 
 Evaluating the correlation of all the predictor variables showed that Second Serve Percentage is perfectly negatively correlated with First Serve Percentage for both players (as shown in Appendix B). Therefore, I removed Second Serve Percentage entirely from my models.
 
-I began with building a logistic regression model from the full dataset.
-
 ### Overall
 
+I began with building a logistic regression model from the full dataset.
 
 ```{r}
 linearmodel_overall <- lm(Result ~ . - gender - tournament - Result - SSP.1 - SSP.2, data_final, family = "binomial")
-summary(linearmodel_overall)
+data.frame(summary(linearmodel_overall)$coef) %>%
+  mutate(`Coefficient` = Estimate, `P-Value` = ifelse(round(`Pr...t..`,2) ==0, "<0.01", round(`Pr...t..`,2))) %>%
+  dplyr::select(`Coefficient`, `P-Value`) %>% 
+  tibble::rownames_to_column(var= "Variable") %>% 
+  mutate(Variable = case_when(Variable == "FSP.1" ~ "First Serve Percentage (Player 1)",
+                              Variable == "FSP.2" ~ "First Serve Percentage (Player 2)",
+                              Variable == "FSW.1" ~ "First Serves Won (Player 1)",
+                              Variable == "FSW.2" ~ "First Serves Won (Player 2)",
+                              Variable == "SSW.1" ~ "Second Serves Won (Player 1)",
+                              Variable == "SSW.2" ~ "Second Serves Won (Player 2)",
+                              Variable == "ACE.1" ~ "Number of Aces (Player 1)",
+                              Variable == "ACE.2" ~ "Number of Aces (Player 2)",
+                              Variable == "DBF.1" ~ "Number of Double Faults (Player 1)",
+                              Variable == "DBF.2" ~ "Number of Double Faults (Player 2)",
+                              Variable == "WNR.1" ~ "Number of Winners (Player 1)",
+                              Variable == "WNR.2" ~ "Number of Winners (Player 2)",
+                              Variable == "UFE.1" ~ "Number of Unforced Errors (Player 1)",
+                              Variable == "UFE.2" ~ "Number of Unforced Errors (Player 2)",
+                              Variable == "BPC.1" ~ "Break Points Created (Player 1)",
+                              Variable == "BPC.2" ~ "Break Points Created (Player 2)",
+                              Variable == "BPW.1" ~ "Break Points Won (Player 1)",
+                              Variable == "BPW.2" ~ "Break Points Won (Player 2)",
+                              Variable == "NPA.1" ~ "Net Points Attempted (Player 1)",
+                              Variable == "NPA.2" ~ "Net Points Attempted (Player 2)",
+                              Variable == "NPW.1" ~ "Net Points Won (Player 1)",
+                              Variable == "NPW.2" ~ "Net Points Won (Player 2)",
+                              Variable == "(Intercept)" ~ "Intercept")) %>% 
+  kable(format = "markdown", digits=3, caption="Overall Logistic Regression Model")
 ```
 
 
@@ -169,7 +200,35 @@ data_women <- data_final %>%
   filter(gender == "women")
 
 linearmodel_women <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2  + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data_women, family = "binomial")
-summary(linearmodel_women)
+
+data.frame(summary(linearmodel_women)$coef) %>%
+  mutate(`Coefficient` = Estimate, `P-Value` = ifelse(round(`Pr...z..`,2) ==0, "<0.01", round(`Pr...z..`,2))) %>%
+  dplyr::select(`Coefficient`, `P-Value`) %>% 
+  tibble::rownames_to_column(var= "Variable") %>% 
+  mutate(Variable = case_when(Variable == "FSP.1" ~ "First Serve Percentage (Player 1)",
+                              Variable == "FSP.2" ~ "First Serve Percentage (Player 2)",
+                              Variable == "FSW.1" ~ "First Serves Won (Player 1)",
+                              Variable == "FSW.2" ~ "First Serves Won (Player 2)",
+                              Variable == "SSW.1" ~ "Second Serves Won (Player 1)",
+                              Variable == "SSW.2" ~ "Second Serves Won (Player 2)",
+                              Variable == "ACE.1" ~ "Number of Aces (Player 1)",
+                              Variable == "ACE.2" ~ "Number of Aces (Player 2)",
+                              Variable == "DBF.1" ~ "Number of Double Faults (Player 1)",
+                              Variable == "DBF.2" ~ "Number of Double Faults (Player 2)",
+                              Variable == "WNR.1" ~ "Number of Winners (Player 1)",
+                              Variable == "WNR.2" ~ "Number of Winners (Player 2)",
+                              Variable == "UFE.1" ~ "Number of Unforced Errors (Player 1)",
+                              Variable == "UFE.2" ~ "Number of Unforced Errors (Player 2)",
+                              Variable == "BPC.1" ~ "Break Points Created (Player 1)",
+                              Variable == "BPC.2" ~ "Break Points Created (Player 2)",
+                              Variable == "BPW.1" ~ "Break Points Won (Player 1)",
+                              Variable == "BPW.2" ~ "Break Points Won (Player 2)",
+                              Variable == "NPA.1" ~ "Net Points Attempted (Player 1)",
+                              Variable == "NPA.2" ~ "Net Points Attempted (Player 2)",
+                              Variable == "NPW.1" ~ "Net Points Won (Player 1)",
+                              Variable == "NPW.2" ~ "Net Points Won (Player 2)",
+                              Variable == "(Intercept)" ~ "Intercept")) %>% 
+  kable(format = "markdown", digits=3, caption="Women Logistic Regression Model")
 ```
 
 
@@ -180,7 +239,35 @@ data_men <- data_final %>%
   filter(gender == "men")
 
 linearmodel_men <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2  + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data_women, family = "binomial")
-summary(linearmodel_men)
+
+data.frame(summary(linearmodel_men)$coef) %>%
+  mutate(`Coefficient` = Estimate, `P-Value` = ifelse(round(`Pr...z..`,2) ==0, "<0.01", round(`Pr...z..`,2))) %>%
+  dplyr::select(`Coefficient`, `P-Value`) %>% 
+  tibble::rownames_to_column(var= "Variable") %>% 
+  mutate(Variable = case_when(Variable == "FSP.1" ~ "First Serve Percentage (Player 1)",
+                              Variable == "FSP.2" ~ "First Serve Percentage (Player 2)",
+                              Variable == "FSW.1" ~ "First Serves Won (Player 1)",
+                              Variable == "FSW.2" ~ "First Serves Won (Player 2)",
+                              Variable == "SSW.1" ~ "Second Serves Won (Player 1)",
+                              Variable == "SSW.2" ~ "Second Serves Won (Player 2)",
+                              Variable == "ACE.1" ~ "Number of Aces (Player 1)",
+                              Variable == "ACE.2" ~ "Number of Aces (Player 2)",
+                              Variable == "DBF.1" ~ "Number of Double Faults (Player 1)",
+                              Variable == "DBF.2" ~ "Number of Double Faults (Player 2)",
+                              Variable == "WNR.1" ~ "Number of Winners (Player 1)",
+                              Variable == "WNR.2" ~ "Number of Winners (Player 2)",
+                              Variable == "UFE.1" ~ "Number of Unforced Errors (Player 1)",
+                              Variable == "UFE.2" ~ "Number of Unforced Errors (Player 2)",
+                              Variable == "BPC.1" ~ "Break Points Created (Player 1)",
+                              Variable == "BPC.2" ~ "Break Points Created (Player 2)",
+                              Variable == "BPW.1" ~ "Break Points Won (Player 1)",
+                              Variable == "BPW.2" ~ "Break Points Won (Player 2)",
+                              Variable == "NPA.1" ~ "Net Points Attempted (Player 1)",
+                              Variable == "NPA.2" ~ "Net Points Attempted (Player 2)",
+                              Variable == "NPW.1" ~ "Net Points Won (Player 1)",
+                              Variable == "NPW.2" ~ "Net Points Won (Player 2)",
+                              Variable == "(Intercept)" ~ "Intercept")) %>% 
+  kable(format = "markdown", digits=3, caption="Men Logistic Regression Model")
 ```
 
 
@@ -188,7 +275,36 @@ summary(linearmodel_men)
 
 ```{r}
 linearmodel_aus <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, aus_open, family = "binomial")
-summary(linearmodel_aus)
+
+data.frame(summary(linearmodel_aus)$coef) %>%
+  mutate(`Coefficient` = Estimate, `P-Value` = ifelse(round(`Pr...z..`,2) ==0, "<0.01", round(`Pr...z..`,2))) %>%
+  dplyr::select(`Coefficient`, `P-Value`) %>% 
+  tibble::rownames_to_column(var= "Variable") %>% 
+  mutate(Variable = case_when(Variable == "FSP.1" ~ "First Serve Percentage (Player 1)",
+                              Variable == "FSP.2" ~ "First Serve Percentage (Player 2)",
+                              Variable == "FSW.1" ~ "First Serves Won (Player 1)",
+                              Variable == "FSW.2" ~ "First Serves Won (Player 2)",
+                              Variable == "SSW.1" ~ "Second Serves Won (Player 1)",
+                              Variable == "SSW.2" ~ "Second Serves Won (Player 2)",
+                              Variable == "ACE.1" ~ "Number of Aces (Player 1)",
+                              Variable == "ACE.2" ~ "Number of Aces (Player 2)",
+                              Variable == "DBF.1" ~ "Number of Double Faults (Player 1)",
+                              Variable == "DBF.2" ~ "Number of Double Faults (Player 2)",
+                              Variable == "WNR.1" ~ "Number of Winners (Player 1)",
+                              Variable == "WNR.2" ~ "Number of Winners (Player 2)",
+                              Variable == "UFE.1" ~ "Number of Unforced Errors (Player 1)",
+                              Variable == "UFE.2" ~ "Number of Unforced Errors (Player 2)",
+                              Variable == "BPC.1" ~ "Break Points Created (Player 1)",
+                              Variable == "BPC.2" ~ "Break Points Created (Player 2)",
+                              Variable == "BPW.1" ~ "Break Points Won (Player 1)",
+                              Variable == "BPW.2" ~ "Break Points Won (Player 2)",
+                              Variable == "NPA.1" ~ "Net Points Attempted (Player 1)",
+                              Variable == "NPA.2" ~ "Net Points Attempted (Player 2)",
+                              Variable == "NPW.1" ~ "Net Points Won (Player 1)",
+                              Variable == "NPW.2" ~ "Net Points Won (Player 2)",
+                              Variable == "(Intercept)" ~ "Intercept")) %>% 
+  kable(format = "markdown", digits=3, caption="Women Logistic Regression Model")
+
 ```
 
 
@@ -196,7 +312,35 @@ summary(linearmodel_aus)
 
 ```{r}
 linearmodel_french <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, french_open, family = "binomial")
-summary(linearmodel_french)
+
+data.frame(summary(linearmodel_french)$coef) %>%
+  mutate(`Coefficient` = Estimate, `P-Value` = ifelse(round(`Pr...z..`,2) ==0, "<0.01", round(`Pr...z..`,2))) %>%
+  dplyr::select(`Coefficient`, `P-Value`) %>% 
+  tibble::rownames_to_column(var= "Variable") %>% 
+  mutate(Variable = case_when(Variable == "FSP.1" ~ "First Serve Percentage (Player 1)",
+                              Variable == "FSP.2" ~ "First Serve Percentage (Player 2)",
+                              Variable == "FSW.1" ~ "First Serves Won (Player 1)",
+                              Variable == "FSW.2" ~ "First Serves Won (Player 2)",
+                              Variable == "SSW.1" ~ "Second Serves Won (Player 1)",
+                              Variable == "SSW.2" ~ "Second Serves Won (Player 2)",
+                              Variable == "ACE.1" ~ "Number of Aces (Player 1)",
+                              Variable == "ACE.2" ~ "Number of Aces (Player 2)",
+                              Variable == "DBF.1" ~ "Number of Double Faults (Player 1)",
+                              Variable == "DBF.2" ~ "Number of Double Faults (Player 2)",
+                              Variable == "WNR.1" ~ "Number of Winners (Player 1)",
+                              Variable == "WNR.2" ~ "Number of Winners (Player 2)",
+                              Variable == "UFE.1" ~ "Number of Unforced Errors (Player 1)",
+                              Variable == "UFE.2" ~ "Number of Unforced Errors (Player 2)",
+                              Variable == "BPC.1" ~ "Break Points Created (Player 1)",
+                              Variable == "BPC.2" ~ "Break Points Created (Player 2)",
+                              Variable == "BPW.1" ~ "Break Points Won (Player 1)",
+                              Variable == "BPW.2" ~ "Break Points Won (Player 2)",
+                              Variable == "NPA.1" ~ "Net Points Attempted (Player 1)",
+                              Variable == "NPA.2" ~ "Net Points Attempted (Player 2)",
+                              Variable == "NPW.1" ~ "Net Points Won (Player 1)",
+                              Variable == "NPW.2" ~ "Net Points Won (Player 2)",
+                              Variable == "(Intercept)" ~ "Intercept")) %>% 
+  kable(format = "markdown", digits=3, caption="Women Logistic Regression Model")
 ```
 
 ### Wimbledon
@@ -204,7 +348,34 @@ summary(linearmodel_french)
 ```{r}
 linearmodel_wimbledon <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, wimbledon, family = "binomial")
 
-summary(linearmodel_wimbledon)
+data.frame(summary(linearmodel_wimbledon)$coef) %>%
+  mutate(`Coefficient` = Estimate, `P-Value` = ifelse(round(`Pr...z..`,2) ==0, "<0.01", round(`Pr...z..`,2))) %>%
+  dplyr::select(`Coefficient`, `P-Value`) %>% 
+  tibble::rownames_to_column(var= "Variable") %>% 
+  mutate(Variable = case_when(Variable == "FSP.1" ~ "First Serve Percentage (Player 1)",
+                              Variable == "FSP.2" ~ "First Serve Percentage (Player 2)",
+                              Variable == "FSW.1" ~ "First Serves Won (Player 1)",
+                              Variable == "FSW.2" ~ "First Serves Won (Player 2)",
+                              Variable == "SSW.1" ~ "Second Serves Won (Player 1)",
+                              Variable == "SSW.2" ~ "Second Serves Won (Player 2)",
+                              Variable == "ACE.1" ~ "Number of Aces (Player 1)",
+                              Variable == "ACE.2" ~ "Number of Aces (Player 2)",
+                              Variable == "DBF.1" ~ "Number of Double Faults (Player 1)",
+                              Variable == "DBF.2" ~ "Number of Double Faults (Player 2)",
+                              Variable == "WNR.1" ~ "Number of Winners (Player 1)",
+                              Variable == "WNR.2" ~ "Number of Winners (Player 2)",
+                              Variable == "UFE.1" ~ "Number of Unforced Errors (Player 1)",
+                              Variable == "UFE.2" ~ "Number of Unforced Errors (Player 2)",
+                              Variable == "BPC.1" ~ "Break Points Created (Player 1)",
+                              Variable == "BPC.2" ~ "Break Points Created (Player 2)",
+                              Variable == "BPW.1" ~ "Break Points Won (Player 1)",
+                              Variable == "BPW.2" ~ "Break Points Won (Player 2)",
+                              Variable == "NPA.1" ~ "Net Points Attempted (Player 1)",
+                              Variable == "NPA.2" ~ "Net Points Attempted (Player 2)",
+                              Variable == "NPW.1" ~ "Net Points Won (Player 1)",
+                              Variable == "NPW.2" ~ "Net Points Won (Player 2)",
+                              Variable == "(Intercept)" ~ "Intercept")) %>% 
+  kable(format = "markdown", digits=3, caption="Women Logistic Regression Model")
 ```
 
 
