@@ -29,7 +29,9 @@ The dataset we are analyzing contains match statistics from 943 men's and women'
 Our primary research question for this analysis is: Which tennis match statistics are most strongly associated with winning, and does that vary by gender and/or court surface?
 
 
-## Data
+## Methodology
+
+### Data
 
 ```{r}
 aus_men <- read_csv("AusOpen-men-2013.csv")
@@ -97,14 +99,12 @@ To visually investigate the associations between match statistics and match winn
 FSP_plot <- ggplot(data_final, aes(factor(Result), FSP.1)) +
   geom_boxplot() +
   labs(title = 'Winner And Player 1 First Serve Percentage', x = "Winner", y = "First Serve Percentage")
-FSP_plot
 ```
 
 ```{r}
 FSW_plot <- ggplot(data_final, aes(factor(Result), FSW.1)) +
   geom_boxplot() +
   labs(title = 'Winner And Player 1 First Serves Won', x = "Winner", y = "First Serves Won")
-FSW_plot
 ```
 
 
@@ -112,53 +112,66 @@ FSW_plot
 SSW_plot <- ggplot(data_final, aes(factor(Result), SSW.1)) +
   geom_boxplot() +
   labs(title = 'Winner And Player 1 Second Serves Won', x = "Winner", y = "Second Serves Won")
-SSW_plot
 ```
+
 ```{r}
 ACE_plot <- ggplot(data_final, aes(factor(Result), ACE.1)) +
   geom_boxplot() +
   labs(title = 'Winner And Player 1 Aces', x = "Winner", y = "Number of Aces")
-ACE_plot
 ```
-
 
 ```{r}
 WNR_plot <- ggplot(data_final, aes(factor(Result), WNR.1)) +
   geom_boxplot() +
-  labs(title = 'Winner And Player 1 Winners', x = "Winner", y = "Winners")
-WNR_plot
+  labs(title = 'Winner And Player 1 Winners', x = "Winner", y = "Number of Winners")
 ```
 
 ```{r}
 UFE_plot <- ggplot(data_final, aes(factor(Result), UFE.1)) +
   geom_boxplot() +
   labs(title = 'Winner And Player 1 Unforced Errors', x = "Winner", y = "Unforced Errors")
-UFE_plot
 ```
+
 ```{r}
 BPC_plot <- ggplot(data_final, aes(factor(Result), BPC.1)) +
   geom_boxplot() +
   labs(title = 'Winner And Player 1 Break Points Created', x = "Winner", y = "Break Points Created")
-BPC_plot
 ```
 
 ```{r}
 BPW_plot <- ggplot(data_final, aes(factor(Result), BPW.1)) +
   geom_boxplot() +
   labs(title = 'Winner And Player 1 Break Points Won', x = "Winner", y = "Break Points Won")
-BPW_plot
 ```
 
+```{r}
+library(ggpubr)
+theme_set(theme_pubr())
 
-## Methodology
+boxplots <- ggarrange(FSP_plot, FSW_plot, SSW_plot, ACE_plot, WNR_plot, UFE_plot, BPC_plot, BPW_plot,
+                      ncol = 2, nrow = 2)
 
-With a set of predictors and a binary response variable, I started my analysis with logistic regression modelling,
+boxplots
+```
+
+See Appendix A for boxplots of the remaining predictor variables, which I chose not to include because they did not show any differences as large as those shown above.
+
+### Modeling
+
+With a set of predictors and a binary response variable, I started my analysis with logistic regression modeling.
 
 Evaluating the correlation of all the predictor variables showed that Second Serve Percentage is perfectly negatively correlated with First Serve Percentage for both players (as shown in Appendix B). Therefore, I removed Second Serve Percentage entirely from my models.
 
-### Overall
+I began with building a logistic regression model from the full dataset. Then, I created one logistic regression model only with data from matches between women, and another logistic regression model only with data from matches between men. Finally, I made three separate logistic regression models for each of the three different tournaments (Australian Open, French Open, and Wimbledon). 
 
-I began with building a logistic regression model from the full dataset.
+I followed the same framework of analysis to build boosted classification trees. As a result, I have built separate boosted trees for the full dataset, the data from matches between women, the data from matches between men, the data from Australian Open matches, the data from French Open matches, and the data from Wimbledon matches,
+
+By building two different types of models on many different subsets of data, I hope to illuminate some insight on which match statistics are most strongly associated with winning and how that might change for different genders and different court surfaces.
+
+
+## Results
+
+### Overall Logistic Regression Model
 
 ```{r}
 linearmodel_overall <- lm(Result ~ . - gender - tournament - Result - SSP.1 - SSP.2, data_final, family = "binomial")
@@ -192,8 +205,15 @@ data.frame(summary(linearmodel_overall)$coef) %>%
   kable(format = "markdown", digits=3, caption="Overall Logistic Regression Model")
 ```
 
+The overall logistic regression model shows that Break Points Created has the strongest association with winning, followed by First Serves Won and Break Points Won.  
 
-### Women
+Specifically, every one-unit increase in number of break points created by player 1 is associated with an expected increase of approximately 0.032 in the log-odds of player 1 winning the match, holding all other variables in the model constant. Similarly, every one-unit increase in number of break points created by player 2 is associated with an expected decrease of approximately 0.032 in the log-odds of player 1 winning the match, holding all other variables in the model constant. 
+
+Every one-unit increase in number of first serves won by player 1 is associated with an expected increase of approximately 0.021 in the log-odds of player 1 winning the match, holding all other variables in the model constant. Similarly, every one-unit increase in number of first serves won by player 2 is associated with an expected decrease of approximately 0.021 in the log-odds of player 1 winning the match, holding all other variables in the model constant.
+
+Every one-unit increase in number of break points won by player 1 is associated with an expected increase of approximately 0.024 in the log-odds of player 1 winning the match, holding all other variables in the model constant. Every one-unit increase in number of break points won by player 2 is associated with an expected decrease of approximately 0.013 in the log-odds of player 1 winning the match, holding all other variables in the model constant. 
+
+### Logistic Regression Model for Women
 
 ```{r}
 data_women <- data_final %>%
@@ -231,8 +251,9 @@ data.frame(summary(linearmodel_women)$coef) %>%
   kable(format = "markdown", digits=3, caption="Women Logistic Regression Model")
 ```
 
+The logistic regression model for women shows that Break Points Created has the strongest association with winning, followed by First Serves Won and Break Points Won. These factors are the same factors as the overall logistic regression model, but the magnitude of the coefficients is much larger. This difference in magnitude between the coefficients of the two different models is likely because the model for only women uses much less data as it is only a subset of the original data. Note that majority of the coefficients in this model are statistically insignificant.  
 
-### Men
+### Logistic Regression Model for Men
 
 ```{r}
 data_men <- data_final %>%
@@ -270,6 +291,8 @@ data.frame(summary(linearmodel_men)$coef) %>%
   kable(format = "markdown", digits=3, caption="Men Logistic Regression Model")
 ```
 
+The logistic regression model for men shows that Break Points Created has the strongest association with winning, followed by First Serves Won and Break Points Won. These factors are the same factors as the overall logistic regression model, but the magnitude of the coefficients is much larger. This difference in magnitude between the coefficients of the two different models is likely because the model for only men uses much less data as it is only a subset of the original data. The magnitudes of the coefficients of the logistic model for men are relatively similar to the magnitudes of the coefficients of the logistic model for women. Thus, these models fail to show meaningful differences between men and women in the associations of match statistics and match winners. Note that majority of the coefficients in this model are statistically insignificant. 
+
 
 ### Australian Open
 
@@ -303,10 +326,11 @@ data.frame(summary(linearmodel_aus)$coef) %>%
                               Variable == "NPW.1" ~ "Net Points Won (Player 1)",
                               Variable == "NPW.2" ~ "Net Points Won (Player 2)",
                               Variable == "(Intercept)" ~ "Intercept")) %>% 
-  kable(format = "markdown", digits=3, caption="Women Logistic Regression Model")
+  kable(format = "markdown", digits=3, caption="Australian Open Logistic Regression Model")
 
 ```
 
+The logistic regression model for the Australian Open shows that Break Points Created has the strongest association with winning, followed by Number of Double Faults and Second Serves Won. While the first strongest factor is the same as the overall logistic regression model, the following two are not. In addition, the magnitude of the coefficients is much larger. This difference in magnitude between the coefficients of the two different models is likely because the model for only the Australian Open uses much less data than any of the above models as it is only a subset of the original data. Many of the coefficients go against intuition (for example, the model shows that player 1 winning net points is associated with a decrease in the log-odds of player 1 winning on average and holding all other variables in the model constant). Note that majority of the coefficients in this model are statistically insignificant. Considering all the above, the very small sample size for only Australian Open data severely reduces the accuracy of interpretations based on this logistic regression model. 
 
 ### French Open
 
@@ -340,8 +364,11 @@ data.frame(summary(linearmodel_french)$coef) %>%
                               Variable == "NPW.1" ~ "Net Points Won (Player 1)",
                               Variable == "NPW.2" ~ "Net Points Won (Player 2)",
                               Variable == "(Intercept)" ~ "Intercept")) %>% 
-  kable(format = "markdown", digits=3, caption="Women Logistic Regression Model")
+  kable(format = "markdown", digits=3, caption="French Open Logistic Regression Model")
 ```
+
+The logistic regression model for the French Open shows that Break Points Created has the strongest association with winning, followed by Number of Double Faults. These factors are the same as the factors most strongly associated with winning in the Australian Open model. However, like the Australian Open model, the magnitudes of the coefficients of this model are much larger than those of the overall logistical model. This difference is likely because the model for only the French Open uses much less data than any of the above models as it is only a subset of the original data. The rest of the coefficients go against intuition (for example, the model shows that player 1 winning net points is associated with a decrease in the log-odds of player 1 winning on average and holding all other variables in the model constant). Note that all of the coefficients in this model are statistically insignificant. Considering all the above, the very small sample size for only French Open data severely reduces the accuracy of interpretations based on this logistic regression model. 
+
 
 ### Wimbledon
 
@@ -375,8 +402,10 @@ data.frame(summary(linearmodel_wimbledon)$coef) %>%
                               Variable == "NPW.1" ~ "Net Points Won (Player 1)",
                               Variable == "NPW.2" ~ "Net Points Won (Player 2)",
                               Variable == "(Intercept)" ~ "Intercept")) %>% 
-  kable(format = "markdown", digits=3, caption="Women Logistic Regression Model")
+  kable(format = "markdown", digits=3, caption="Wimbledon Logistic Regression Model")
 ```
+
+The logistic regression model for Wimbledon shows that Break Points Won has the strongest association with winning, followed by First Serves Won. These factors are different from the factors most strongly associated with winning in the previous models. However, like the Australian Open and French Open models, the magnitudes of the coefficients of this model are somewhat larger than those of the overall logistical model. This difference is likely because the model for only Wimbledon uses much less data than any of the above models as it is only a subset of the original data. The rest of the coefficients go against intuition (for example, the model shows that player 1 winning net points is associated with a decrease in the log-odds of player 1 winning on average and holding all other variables in the model constant). Note that almost all of the coefficients in this model are statistically insignificant (except Break Points Won). Considering all the above, the very small sample size for only Wimbledon data severely reduces the accuracy of interpretations based on this logistic regression model.
 
 
 ### Classification Tree
@@ -416,18 +445,10 @@ prp(pruned_tree,
 ```
 
 ```{r}
-library(tree)
-tree3 <- tree(Result ~ . - gender - tournament - Result, data_final)
-summary(tree3)
-plot(tree3)
-text(tree3, pretty = 0)
-```
-
-```{r}
 library(gbm)
 set.seed(1)
 boost <- gbm(Result ~.-gender - tournament - Result, data = data_final, 
-                    distribution = "gaussian", n.trees = 5000,
+                    distribution = "multinomial", n.trees = 5000,
                     interaction.depth = 3)
 summary(boost)
 ```
@@ -436,7 +457,7 @@ summary(boost)
 library(gbm)
 set.seed(1)
 boost_women <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = data_women, 
-                    distribution = "gaussian", n.trees = 5000,
+                    distribution = "multinomial", n.trees = 5000,
                     interaction.depth = 3)
 summary(boost_women)
 ```
@@ -445,7 +466,7 @@ summary(boost_women)
 library(gbm)
 set.seed(1)
 boost_men <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = data_men, 
-                    distribution = "gaussian", n.trees = 5000,
+                    distribution = "multinomial", n.trees = 5000,
                     interaction.depth = 3)
 summary(boost_men)
 ```
@@ -454,7 +475,7 @@ summary(boost_men)
 library(gbm)
 set.seed(1)
 boost_aus <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = aus_open, 
-                    distribution = "gaussian", n.trees = 5000,
+                    distribution = "multinomial", n.trees = 5000,
                     interaction.depth = 3)
 summary(boost_aus)
 ```
@@ -463,7 +484,7 @@ summary(boost_aus)
 library(gbm)
 set.seed(1)
 boost_french <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = french_open, 
-                    distribution = "gaussian", n.trees = 5000,
+                    distribution = "multinomial", n.trees = 5000,
                     interaction.depth = 3)
 summary(boost_french)
 ```
@@ -473,12 +494,11 @@ summary(boost_french)
 library(gbm)
 set.seed(1)
 boost_wimbledon <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = wimbledon, 
-                    distribution = "gaussian", n.trees = 5000,
+                    distribution = "multinomial", n.trees = 5000,
                     interaction.depth = 3)
 summary(boost_wimbledon)
 ```
 
-## Results
 
 ## Discussion
 
