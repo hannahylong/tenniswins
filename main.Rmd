@@ -1,10 +1,11 @@
 ---
+author: "Hannah Long"
+date: "`r Sys.Date()`"
+title: "Exploring the Association between Tennis Match Statistics and Match Winners"
 output:
   pdf_document: default
   html_document: default
 ---
-
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
@@ -22,11 +23,11 @@ library(gtsummary)
 
 ## Introduction
 
-Tennis is one of the most popular sports around the world. The game is very dynamic and has a lot of moving parts: serving, baseline play, and net play. Each match consists of many points, and thus a lot of data can be collected about each player's performance over the course of an entire match. The goal of this analysis is to understand which match and/or player statistics have the strongest associations with winning a match and to quantify those associations.   
+Tennis is one of the most popular sports around the world. The game is very dynamic and has a lot of moving parts: serving, receiving, baseline play, and net play. Each match consists of many points, and thus a lot of data can be collected about each player's performance over the course of an entire match. The goal of this analysis is to understand which match and/or player statistics have the strongest associations with winning a match.
 
 The dataset we are analyzing contains match statistics from 943 men's and women's matches which occurred in one of four grand slam tournaments in 2013: the Australian Open, the French Open, Wimbledon, and the US Open. Each observation is an individual match. The response variable is a binary indicator: a value of 1 indicates that player 1 won the match, and a value of 0 indicates that player 1 lost the match (the player numbers are arbitrarily assigned and correspond to which player name is listed first for each observation). The match statistics recorded for each observation are First Serve Percentage, First Serves Won, Second Serve Percentage, Second Serves Won, Aces, Double Faults, Winners, Unforced Errors, Break Points Created, Break Points Won, Net Points Attempted, Net Points Won, Total Points Won, Results for each set, and Final Number of Games Won (recorded for each player). The Australian Open and the US Open are both played on hard court, the French Open is played on clay, and Wimbledon is played on grass.
 
-Our primary research question for this analysis is: Which tennis match statistics are most strongly associated with winning, and does that vary by gender and/or court surface?
+Our primary research question for this analysis is: Which tennis match statistics are most strongly associated with winning, and how does that vary by gender and/or court surface? Understanding the answer to this question will provide both spectators and players of tennis with a much deeper appreciation for the most important aspects of the game. Moreover, it can help players decide what aspects of tennis to focus on the most, both in training and in competitive matches. 
 
 
 ## Methodology
@@ -46,7 +47,6 @@ us_women <- read_csv("USOpen-women-2013.csv")
 wimbledon_men <- read_csv("Wimbledon-men-2013.csv")
 wimbledon_women <- read_csv("Wimbledon-women-2013.csv")
 ```
-
 
 After examining the data, I first selected only for relevant match statistics: player names were removed because I am not considering any background information about specific players in my analysis, and the results at the end of each set and the total games won were removed because I am only interested in purely how players' performance during the points is associated with the final winner.  
 
@@ -149,10 +149,11 @@ library(ggpubr)
 theme_set(theme_pubr())
 
 boxplots <- ggarrange(FSP_plot, FSW_plot, SSW_plot, ACE_plot, WNR_plot, UFE_plot, BPC_plot, BPW_plot,
-                      ncol = 2, nrow = 2)
+                      ncol = 2, nrow = 2, font.label=list(color="black",size=5))
 
 boxplots
 ```
+The box plots show that Break Points Created and Break Points Won by player 1 have the biggest difference between matches which player 1 wins and loses.
 
 See Appendix A for boxplots of the remaining predictor variables, which I chose not to include because they did not show any differences as large as those shown above.
 
@@ -294,7 +295,7 @@ data.frame(summary(linearmodel_men)$coef) %>%
 The logistic regression model for men shows that Break Points Created has the strongest association with winning, followed by First Serves Won and Break Points Won. These factors are the same factors as the overall logistic regression model, but the magnitude of the coefficients is much larger. This difference in magnitude between the coefficients of the two different models is likely because the model for only men uses much less data as it is only a subset of the original data. The magnitudes of the coefficients of the logistic model for men are relatively similar to the magnitudes of the coefficients of the logistic model for women. Thus, these models fail to show meaningful differences between men and women in the associations of match statistics and match winners. Note that majority of the coefficients in this model are statistically insignificant. 
 
 
-### Australian Open
+### Logistic Regression Model for Australian Open
 
 ```{r}
 linearmodel_aus <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, aus_open, family = "binomial")
@@ -332,7 +333,7 @@ data.frame(summary(linearmodel_aus)$coef) %>%
 
 The logistic regression model for the Australian Open shows that Break Points Created has the strongest association with winning, followed by Number of Double Faults and Second Serves Won. While the first strongest factor is the same as the overall logistic regression model, the following two are not. In addition, the magnitude of the coefficients is much larger. This difference in magnitude between the coefficients of the two different models is likely because the model for only the Australian Open uses much less data than any of the above models as it is only a subset of the original data. Many of the coefficients go against intuition (for example, the model shows that player 1 winning net points is associated with a decrease in the log-odds of player 1 winning on average and holding all other variables in the model constant). Note that majority of the coefficients in this model are statistically insignificant. Considering all the above, the very small sample size for only Australian Open data severely reduces the accuracy of interpretations based on this logistic regression model. 
 
-### French Open
+### Logistic Regression Model for French Open
 
 ```{r}
 linearmodel_french <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, french_open, family = "binomial")
@@ -370,7 +371,7 @@ data.frame(summary(linearmodel_french)$coef) %>%
 The logistic regression model for the French Open shows that Break Points Created has the strongest association with winning, followed by Number of Double Faults. These factors are the same as the factors most strongly associated with winning in the Australian Open model. However, like the Australian Open model, the magnitudes of the coefficients of this model are much larger than those of the overall logistical model. This difference is likely because the model for only the French Open uses much less data than any of the above models as it is only a subset of the original data. The rest of the coefficients go against intuition (for example, the model shows that player 1 winning net points is associated with a decrease in the log-odds of player 1 winning on average and holding all other variables in the model constant). Note that all of the coefficients in this model are statistically insignificant. Considering all the above, the very small sample size for only French Open data severely reduces the accuracy of interpretations based on this logistic regression model. 
 
 
-### Wimbledon
+### Logistic Regression Model for Wimbledon
 
 ```{r}
 linearmodel_wimbledon <- glm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, wimbledon, family = "binomial")
@@ -408,41 +409,8 @@ data.frame(summary(linearmodel_wimbledon)$coef) %>%
 The logistic regression model for Wimbledon shows that Break Points Won has the strongest association with winning, followed by First Serves Won. These factors are different from the factors most strongly associated with winning in the previous models. However, like the Australian Open and French Open models, the magnitudes of the coefficients of this model are somewhat larger than those of the overall logistical model. This difference is likely because the model for only Wimbledon uses much less data than any of the above models as it is only a subset of the original data. The rest of the coefficients go against intuition (for example, the model shows that player 1 winning net points is associated with a decrease in the log-odds of player 1 winning on average and holding all other variables in the model constant). Note that almost all of the coefficients in this model are statistically insignificant (except Break Points Won). Considering all the above, the very small sample size for only Wimbledon data severely reduces the accuracy of interpretations based on this logistic regression model.
 
 
-### Classification Tree
+### Overall Boosted Classification Tree
 
-```{r}
-# Classification Tree with rpart
-library(rpart) #for fitting decision trees
-library(rpart.plot) #for plotting decision trees
-
-# grow tree
-fit <- rpart(Result ~ . - gender - tournament - Result,
-   method="class", data= data_final)
-
-printcp(fit) # display the results
-plotcp(fit) # visualize cross-validation results
-summary(fit) # detailed summary of splits
-
-# plot tree
-plot(fit, uniform=TRUE,
-   main="Classification Tree for Match Winner")
-text(fit, use.n=TRUE, all=TRUE, cex=.8)
-
-```
-
-```{r}
-best <- fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"]
-
-#produce a pruned tree based on the best cp value
-pruned_tree <- prune(fit, cp=best)
-
-#plot the pruned tree
-prp(pruned_tree,
-    faclen=0, #use full names for factor labels
-    extra=1, #display number of obs. for each terminal node
-    roundint=F, #don't round to integers in output
-    digits=5)
-```
 
 ```{r}
 library(gbm)
@@ -450,8 +418,42 @@ set.seed(1)
 boost <- gbm(Result ~.-gender - tournament - Result, data = data_final, 
                     distribution = "multinomial", n.trees = 5000,
                     interaction.depth = 3)
-summary(boost)
 ```
+
+```{r}
+data.frame(summary(boost)) %>%
+  mutate(`Relative Influence` = `rel.inf`) %>%
+  dplyr::select(`Relative Influence`) %>% 
+  tibble::rownames_to_column(var= "Variable") %>% 
+  mutate(Variable = case_when(Variable == "FSP.1" ~ "First Serve Percentage (Player 1)",
+                              Variable == "FSP.2" ~ "First Serve Percentage (Player 2)",
+                              Variable == "FSW.1" ~ "First Serves Won (Player 1)",
+                              Variable == "FSW.2" ~ "First Serves Won (Player 2)",
+                              Variable == "SSW.1" ~ "Second Serves Won (Player 1)",
+                              Variable == "SSW.2" ~ "Second Serves Won (Player 2)",
+                              Variable == "ACE.1" ~ "Number of Aces (Player 1)",
+                              Variable == "ACE.2" ~ "Number of Aces (Player 2)",
+                              Variable == "DBF.1" ~ "Number of Double Faults (Player 1)",
+                              Variable == "DBF.2" ~ "Number of Double Faults (Player 2)",
+                              Variable == "WNR.1" ~ "Number of Winners (Player 1)",
+                              Variable == "WNR.2" ~ "Number of Winners (Player 2)",
+                              Variable == "UFE.1" ~ "Number of Unforced Errors (Player 1)",
+                              Variable == "UFE.2" ~ "Number of Unforced Errors (Player 2)",
+                              Variable == "BPC.1" ~ "Break Points Created (Player 1)",
+                              Variable == "BPC.2" ~ "Break Points Created (Player 2)",
+                              Variable == "BPW.1" ~ "Break Points Won (Player 1)",
+                              Variable == "BPW.2" ~ "Break Points Won (Player 2)",
+                              Variable == "NPA.1" ~ "Net Points Attempted (Player 1)",
+                              Variable == "NPA.2" ~ "Net Points Attempted (Player 2)",
+                              Variable == "NPW.1" ~ "Net Points Won (Player 1)",
+                              Variable == "NPW.2" ~ "Net Points Won (Player 2)",
+                              Variable == "(Intercept)" ~ "Intercept")) %>% 
+  kable(format = "markdown", digits=3, caption="Overall Classification Tree Relative Variable Influence")
+```
+
+The overall boosted classification tree shows that Break Points Created has a much greater relative influence in the tree than any of the other predictor variables. This evaluation is in agreement with the insight derived from the overall logistic regression model.
+
+### Boosted Classification Tree for Women
 
 ```{r}
 library(gbm)
@@ -459,8 +461,43 @@ set.seed(1)
 boost_women <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = data_women, 
                     distribution = "multinomial", n.trees = 5000,
                     interaction.depth = 3)
-summary(boost_women)
 ```
+
+```{r}
+data.frame(summary(boost_women)) %>%
+  mutate(`Relative Influence` = `rel.inf`) %>%
+  dplyr::select(`Relative Influence`) %>% 
+  tibble::rownames_to_column(var= "Variable") %>% 
+  mutate(Variable = case_when(Variable == "FSP.1" ~ "First Serve Percentage (Player 1)",
+                              Variable == "FSP.2" ~ "First Serve Percentage (Player 2)",
+                              Variable == "FSW.1" ~ "First Serves Won (Player 1)",
+                              Variable == "FSW.2" ~ "First Serves Won (Player 2)",
+                              Variable == "SSW.1" ~ "Second Serves Won (Player 1)",
+                              Variable == "SSW.2" ~ "Second Serves Won (Player 2)",
+                              Variable == "ACE.1" ~ "Number of Aces (Player 1)",
+                              Variable == "ACE.2" ~ "Number of Aces (Player 2)",
+                              Variable == "DBF.1" ~ "Number of Double Faults (Player 1)",
+                              Variable == "DBF.2" ~ "Number of Double Faults (Player 2)",
+                              Variable == "WNR.1" ~ "Number of Winners (Player 1)",
+                              Variable == "WNR.2" ~ "Number of Winners (Player 2)",
+                              Variable == "UFE.1" ~ "Number of Unforced Errors (Player 1)",
+                              Variable == "UFE.2" ~ "Number of Unforced Errors (Player 2)",
+                              Variable == "BPC.1" ~ "Break Points Created (Player 1)",
+                              Variable == "BPC.2" ~ "Break Points Created (Player 2)",
+                              Variable == "BPW.1" ~ "Break Points Won (Player 1)",
+                              Variable == "BPW.2" ~ "Break Points Won (Player 2)",
+                              Variable == "NPA.1" ~ "Net Points Attempted (Player 1)",
+                              Variable == "NPA.2" ~ "Net Points Attempted (Player 2)",
+                              Variable == "NPW.1" ~ "Net Points Won (Player 1)",
+                              Variable == "NPW.2" ~ "Net Points Won (Player 2)",
+                              Variable == "(Intercept)" ~ "Intercept")) %>% 
+  kable(format = "markdown", digits=3, caption="Women Classification Tree Relative Variable Influence")
+```
+
+The boosted classification tree for women shows that Break Points Created has a much greater relative influence in the tree than any of the other predictor variables. This evaluation is in agreement with the insight derived from the logistic regression model for women.
+
+
+### Boosted Classification Tree for Men
 
 ```{r}
 library(gbm)
@@ -468,8 +505,42 @@ set.seed(1)
 boost_men <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = data_men, 
                     distribution = "multinomial", n.trees = 5000,
                     interaction.depth = 3)
-summary(boost_men)
 ```
+
+```{r}
+data.frame(summary(boost_men)) %>%
+  mutate(`Relative Influence` = `rel.inf`) %>%
+  dplyr::select(`Relative Influence`) %>% 
+  tibble::rownames_to_column(var= "Variable") %>% 
+  mutate(Variable = case_when(Variable == "FSP.1" ~ "First Serve Percentage (Player 1)",
+                              Variable == "FSP.2" ~ "First Serve Percentage (Player 2)",
+                              Variable == "FSW.1" ~ "First Serves Won (Player 1)",
+                              Variable == "FSW.2" ~ "First Serves Won (Player 2)",
+                              Variable == "SSW.1" ~ "Second Serves Won (Player 1)",
+                              Variable == "SSW.2" ~ "Second Serves Won (Player 2)",
+                              Variable == "ACE.1" ~ "Number of Aces (Player 1)",
+                              Variable == "ACE.2" ~ "Number of Aces (Player 2)",
+                              Variable == "DBF.1" ~ "Number of Double Faults (Player 1)",
+                              Variable == "DBF.2" ~ "Number of Double Faults (Player 2)",
+                              Variable == "WNR.1" ~ "Number of Winners (Player 1)",
+                              Variable == "WNR.2" ~ "Number of Winners (Player 2)",
+                              Variable == "UFE.1" ~ "Number of Unforced Errors (Player 1)",
+                              Variable == "UFE.2" ~ "Number of Unforced Errors (Player 2)",
+                              Variable == "BPC.1" ~ "Break Points Created (Player 1)",
+                              Variable == "BPC.2" ~ "Break Points Created (Player 2)",
+                              Variable == "BPW.1" ~ "Break Points Won (Player 1)",
+                              Variable == "BPW.2" ~ "Break Points Won (Player 2)",
+                              Variable == "NPA.1" ~ "Net Points Attempted (Player 1)",
+                              Variable == "NPA.2" ~ "Net Points Attempted (Player 2)",
+                              Variable == "NPW.1" ~ "Net Points Won (Player 1)",
+                              Variable == "NPW.2" ~ "Net Points Won (Player 2)",
+                              Variable == "(Intercept)" ~ "Intercept")) %>% 
+  kable(format = "markdown", digits=3, caption="Men Classification Tree Relative Variable Influence")
+```
+
+The boosted classification tree for men shows that Break Points Created has a much greater relative influence in the tree than any of the other predictor variables. This evaluation is in agreement with the insight derived from the logistic regression model for women.
+
+### Boosted Classification Tree for Australian Open
 
 ```{r}
 library(gbm)
@@ -477,8 +548,42 @@ set.seed(1)
 boost_aus <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = aus_open, 
                     distribution = "multinomial", n.trees = 5000,
                     interaction.depth = 3)
-summary(boost_aus)
 ```
+
+```{r}
+data.frame(summary(boost_aus)) %>%
+  mutate(`Relative Influence` = `rel.inf`) %>%
+  dplyr::select(`Relative Influence`) %>% 
+  tibble::rownames_to_column(var= "Variable") %>% 
+  mutate(Variable = case_when(Variable == "FSP.1" ~ "First Serve Percentage (Player 1)",
+                              Variable == "FSP.2" ~ "First Serve Percentage (Player 2)",
+                              Variable == "FSW.1" ~ "First Serves Won (Player 1)",
+                              Variable == "FSW.2" ~ "First Serves Won (Player 2)",
+                              Variable == "SSW.1" ~ "Second Serves Won (Player 1)",
+                              Variable == "SSW.2" ~ "Second Serves Won (Player 2)",
+                              Variable == "ACE.1" ~ "Number of Aces (Player 1)",
+                              Variable == "ACE.2" ~ "Number of Aces (Player 2)",
+                              Variable == "DBF.1" ~ "Number of Double Faults (Player 1)",
+                              Variable == "DBF.2" ~ "Number of Double Faults (Player 2)",
+                              Variable == "WNR.1" ~ "Number of Winners (Player 1)",
+                              Variable == "WNR.2" ~ "Number of Winners (Player 2)",
+                              Variable == "UFE.1" ~ "Number of Unforced Errors (Player 1)",
+                              Variable == "UFE.2" ~ "Number of Unforced Errors (Player 2)",
+                              Variable == "BPC.1" ~ "Break Points Created (Player 1)",
+                              Variable == "BPC.2" ~ "Break Points Created (Player 2)",
+                              Variable == "BPW.1" ~ "Break Points Won (Player 1)",
+                              Variable == "BPW.2" ~ "Break Points Won (Player 2)",
+                              Variable == "NPA.1" ~ "Net Points Attempted (Player 1)",
+                              Variable == "NPA.2" ~ "Net Points Attempted (Player 2)",
+                              Variable == "NPW.1" ~ "Net Points Won (Player 1)",
+                              Variable == "NPW.2" ~ "Net Points Won (Player 2)",
+                              Variable == "(Intercept)" ~ "Intercept")) %>% 
+  kable(format = "markdown", digits=3, caption="Australian Open Classification Tree Relative Variable Influence")
+```
+
+The boosted classification tree for the Australian Open shows that Break Points Created and Number of Double Faults have a much greater relative influence in the tree than any of the other predictor variables. This evaluation is in agreement with the insight derived from the logistic regression model for the Australian Open.
+
+### Boosted Classification Tree for French Open
 
 ```{r}
 library(gbm)
@@ -486,9 +591,42 @@ set.seed(1)
 boost_french <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = french_open, 
                     distribution = "multinomial", n.trees = 5000,
                     interaction.depth = 3)
-summary(boost_french)
 ```
 
+```{r}
+data.frame(summary(boost_french)) %>%
+  mutate(`Relative Influence` = `rel.inf`) %>%
+  dplyr::select(`Relative Influence`) %>% 
+  tibble::rownames_to_column(var= "Variable") %>% 
+  mutate(Variable = case_when(Variable == "FSP.1" ~ "First Serve Percentage (Player 1)",
+                              Variable == "FSP.2" ~ "First Serve Percentage (Player 2)",
+                              Variable == "FSW.1" ~ "First Serves Won (Player 1)",
+                              Variable == "FSW.2" ~ "First Serves Won (Player 2)",
+                              Variable == "SSW.1" ~ "Second Serves Won (Player 1)",
+                              Variable == "SSW.2" ~ "Second Serves Won (Player 2)",
+                              Variable == "ACE.1" ~ "Number of Aces (Player 1)",
+                              Variable == "ACE.2" ~ "Number of Aces (Player 2)",
+                              Variable == "DBF.1" ~ "Number of Double Faults (Player 1)",
+                              Variable == "DBF.2" ~ "Number of Double Faults (Player 2)",
+                              Variable == "WNR.1" ~ "Number of Winners (Player 1)",
+                              Variable == "WNR.2" ~ "Number of Winners (Player 2)",
+                              Variable == "UFE.1" ~ "Number of Unforced Errors (Player 1)",
+                              Variable == "UFE.2" ~ "Number of Unforced Errors (Player 2)",
+                              Variable == "BPC.1" ~ "Break Points Created (Player 1)",
+                              Variable == "BPC.2" ~ "Break Points Created (Player 2)",
+                              Variable == "BPW.1" ~ "Break Points Won (Player 1)",
+                              Variable == "BPW.2" ~ "Break Points Won (Player 2)",
+                              Variable == "NPA.1" ~ "Net Points Attempted (Player 1)",
+                              Variable == "NPA.2" ~ "Net Points Attempted (Player 2)",
+                              Variable == "NPW.1" ~ "Net Points Won (Player 1)",
+                              Variable == "NPW.2" ~ "Net Points Won (Player 2)",
+                              Variable == "(Intercept)" ~ "Intercept")) %>% 
+  kable(format = "markdown", digits=3, caption="French Open Classification Tree Relative Variable Influence")
+```
+
+The boosted classification tree for the French Open shows that Break Points Created has a much greater relative influence in the tree than any of the other predictor variables. This evaluation is in agreement with the insight derived from the logistic regression model for the French Open.
+
+### Boosted Classification Tree for Wimbledon
 
 ```{r}
 library(gbm)
@@ -496,20 +634,52 @@ set.seed(1)
 boost_wimbledon <- gbm(Result ~ FSP.1 + FSP.2 + FSW.1 + FSW.2 + SSW.1 + SSW.2 + ACE.1 + ACE.2 + DBF.1 + DBF.2 + WNR.1 + WNR.2 + UFE.1 + UFE.2 + BPC.1 + BPC.2 + BPW.1 + BPW.2 + NPA.1 + NPA.2 + NPW.1 + NPW.2, data = wimbledon, 
                     distribution = "multinomial", n.trees = 5000,
                     interaction.depth = 3)
-summary(boost_wimbledon)
 ```
 
+```{r}
+data.frame(summary(boost_wimbledon)) %>%
+  mutate(`Relative Influence` = `rel.inf`) %>%
+  dplyr::select(`Relative Influence`) %>% 
+  tibble::rownames_to_column(var= "Variable") %>% 
+  mutate(Variable = case_when(Variable == "FSP.1" ~ "First Serve Percentage (Player 1)",
+                              Variable == "FSP.2" ~ "First Serve Percentage (Player 2)",
+                              Variable == "FSW.1" ~ "First Serves Won (Player 1)",
+                              Variable == "FSW.2" ~ "First Serves Won (Player 2)",
+                              Variable == "SSW.1" ~ "Second Serves Won (Player 1)",
+                              Variable == "SSW.2" ~ "Second Serves Won (Player 2)",
+                              Variable == "ACE.1" ~ "Number of Aces (Player 1)",
+                              Variable == "ACE.2" ~ "Number of Aces (Player 2)",
+                              Variable == "DBF.1" ~ "Number of Double Faults (Player 1)",
+                              Variable == "DBF.2" ~ "Number of Double Faults (Player 2)",
+                              Variable == "WNR.1" ~ "Number of Winners (Player 1)",
+                              Variable == "WNR.2" ~ "Number of Winners (Player 2)",
+                              Variable == "UFE.1" ~ "Number of Unforced Errors (Player 1)",
+                              Variable == "UFE.2" ~ "Number of Unforced Errors (Player 2)",
+                              Variable == "BPC.1" ~ "Break Points Created (Player 1)",
+                              Variable == "BPC.2" ~ "Break Points Created (Player 2)",
+                              Variable == "BPW.1" ~ "Break Points Won (Player 1)",
+                              Variable == "BPW.2" ~ "Break Points Won (Player 2)",
+                              Variable == "NPA.1" ~ "Net Points Attempted (Player 1)",
+                              Variable == "NPA.2" ~ "Net Points Attempted (Player 2)",
+                              Variable == "NPW.1" ~ "Net Points Won (Player 1)",
+                              Variable == "NPW.2" ~ "Net Points Won (Player 2)",
+                              Variable == "(Intercept)" ~ "Intercept")) %>% 
+  kable(format = "markdown", digits=3, caption="Wimbledon Classification Tree Relative Variable Influence")
+```
+
+The boosted classification tree for Wimbledon shows that Break Points Created has a much greater relative influence in the tree than any of the other predictor variables. This evaluation is not in agreement with the insight derived from the logistic regression model for Wimbledon.
 
 ## Discussion
 
-LIMITATIONS
-- split by gender AND surface type
-- not missing completely at random
-- not enough observations
-- high correlation between variables
-- coefficients in model not statistically significant
-- did not account for player demographics, skill level, ranking, etc.
-- from 2013, could be outdated
+After synthesizing the information from all the models built, it is clear that Break Points Created has the strongest association with winning a tennis match. Break points are points in a game when the receiver only needs one more point to win the game. Thus, not all points are created equal. It is not necessarily a player's performance throughout an entire match, but rather their performance during pivotal points, which is most strongly associated with winning the match. Interestingly, it is not winning break points which is most strongly associated with winning; it is simply creating break points which is most strongly associated with winning. So, creating more break points is associated with higher odds of winning.
+
+Therefore, tennis players should focus most on setting themselves up for break points. In training, this could mean especially practicing return of serve. In competitive matches, this could mean paying extra attention to the opponent's serve and putting extra effort into the point right before a potential break point. 
+
+This analysis is inconclusive for determining how associations between match statistics and winning changes based on gender or court surface. There are not enough observations to fit accurate models on subsets of the data based on gender or tournament. If I had more time, I would like to collect a lot more data in order to fit those more specific models. From there, I could also look at subsets by both gender and surface simultaneously (ie. matches between women on clay courts).
+
+The dataset I used is from 2013, so the analysis I have conducted here is potentially outdated and might yield different results if I used more recent data. In addition, this dataset did not include background information on player demographics, skill level, ranking, etc. While I thought the exclusion of those types of variables was beneficial to my analysis, it is possible that accounting for these variables would change my results. Also, I dropped observations with missingness without verifying whether they were missing completely at random, which is a potential limitation on the accuracy of my analysis as well.
+
+In the logistic regression modeling, note that I did not remove variables with high multicollinearity and that many of the variables were statistically insignificant.
 
 ## Appendix
 
